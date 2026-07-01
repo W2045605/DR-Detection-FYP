@@ -10,8 +10,8 @@ pip install -r requirements.txt
 then create an .env. file in the project root with the key:
 SECRET_KEY=any-random-string-for-local-testing-only
 DEBUG=True
-once of all that is done run this to create a superuser to access the django admin section:python manage.py createsuperuser
 then run python manage.py migrate
+once of all that is done run this to create a superuser to access the django admin section:python manage.py createsuperuser
 then python manage.py runserver to start the server 
 the server will then be at http://127.0.0.1:8000/auth/login/
 
