@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block title %}Upload Scan — DR Detection System{% endblock %}
+{% block extra_css %}
+<style>
+    .upload-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 860px; margin: 0 auto; }
+    .upload-zone { border: 2px dashed var(--border); border-radius: 12px; padding: 48px 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface2); }
+    .upload-zone:hover { border-color: var(--blue); background: rgba(30,144,255,0.04); }
+    .upload-zone.dragover { border-color: var(--blue); background: rgba(30,144,255,0.08); }
+    .upload-icon { width: 80px; height: 80px; margin: 0 auto 16px; opacity: 0.7; }
+    .upload-label { font-size: 15px; font-weight: 500; margin-bottom: 6px; }
+    .upload-hint { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+    #fileInput { display: none; }
+    #preview-img { width: 100%; max-height: 200px; object-fit: cover; border-radius: 8px; margin-top: 12px; display: none; }
+    .patient-info-card .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .patient-info-card .info-row:last-child { border-bottom: none; }
+    .patient-info-card .info-row .label { color: var(--text-muted); }
+    .loading-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 999; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .loading-overlay.active { display: flex; }
+    .loading-box { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 48px 64px; max-width: 420px; width: 90%; }
+    .loading-title { font-size: 17px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+    .loading-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 32px; line-height: 1.6; }
+    .progress-bar-wrapper { background: var(--surface2); border-radius: 999px; height: 6px; overflow: hidden; margin-bottom: 24px; }
+    .progress-bar-fill { height: 100%; background: var(--blue); border-radius: 999px; width: 0%; transition: width 0.5s ease; }
+    .spinner { width: 44px; height: 44px; border: 3px solid var(--border); border-top: 3px solid var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 20px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-dots { display: flex; justify-content: center; gap: 6px; margin-top: 16px; }
+    .loading-dots span { width: 6px; height: 6px; background: var(--blue); border-radius: 50%; animation: bounce 1.2s infinite; opacity: 0.4; }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%, 80%, 100% { opacity: 0.4; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1.2); } }
+    .status-text { font-size: 12px; color: var(--text-muted); font-family: 'DM Mono', monospace; margin-top: 12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 860px; margin: 0 auto;">
+    <div style="margin-bottom: 24px;">
+        <a href="{% url 'patient_detail' patient.patient_id %}" class="text-muted text-sm" style="text-decoration: none; margin-bottom: 8px; display: inline-block;">← {{ patient.name }}</a>
+        <div class="page-title">Patient profile</div>
+        <div class="page-subtitle">Upload a retinal scan for analysis</div>
+    </div>
+    <div class="upload-layout">
+        <div>
+            <div class="card patient-info-card" style="margin-bottom: 16px;">
+                <div class="info-row"><span class="label">Notes</span><span>{{ patient.notes|default:"None" }}</span></div>
+                <div class="info-row"><span class="label">Current plan</span><span>{{ patient.stage_of_condition|default:"Not specified" }}</span></div>
+                <div class="info-row"><span class="label">Contact details</span><span>{{ patient.patient_id }}</span></div>
+            </div>
+            <a href="{% url 'patient_detail' patient.patient_id %}" class="btn btn-secondary btn-block">view all scan details</a>
+        </div>
+        <div>
+            <form method="POST" enctype="multipart/form-data" id="uploadForm" onsubmit="showLoading()">
+                {% csrf_token %}
+                <div class="upload-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                    <svg class="upload-icon" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="40" cy="40" r="38" stroke="#1e90ff" stroke-width="2" opacity="0.3"/>
+                        <path d="M40 52V28M28 40l12-12 12 12" stroke="#1e90ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M26 56h28" stroke="#1e90ff" stroke-width="2" stroke-linecap="round" opacity="0.5"/>
+                    </svg>
+                    <div class="upload-label">Upload Diabetic eye image</div>
+                    <div class="upload-hint">JPG or PNG · Click or drag & drop</div>
+                    <input type="file" name="image" id="fileInput" accept="image/*" required onchange="previewImage(this)">
+                    <img id="preview-img" src="" alt="Preview">
+                </div>
+                <div class="form-group" style="margin-top: 16px;">
+                    <label>Notes on image</label>
+                    <textarea name="image_notes" rows="2" placeholder="Any notes about this image..." style="resize: none;"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg">Dr scan</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-box">
+        <div class="loading-title">Loading your scan</div>
+        <div class="loading-subtitle">Please wait while the image is being uploaded.<br>Do not close this window.</div>
+        <div class="progress-bar-wrapper">
+            <div class="progress-bar-fill" id="progressBar"></div>
+        </div>
+        <div class="spinner"></div>
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+        <div class="status-text" id="statusText">Uploading image...</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function previewImage(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const img = document.getElementById('preview-img');
+            img.src = e.target.result;
+            img.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function showLoading() {
+    document.getElementById('loadingOverlay').classList.add('active');
+    const steps = ['Uploading image...', 'Saving to database...', 'Preparing for analysis...'];
+    const progress = [20, 50, 80];
+    let i = 0;
+    const interval = setInterval(() => {
+        if (i < steps.length) {
+            document.getElementById('statusText').textContent = steps[i];
+            document.getElementById('progressBar').style.width = progress[i] + '%';
+            i++;
+        } else {
+            clearInterval(interval);
+        }
+    }, 800);
+}
+
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const files = e.dataTransfer.files;
+    if (files[0]) { document.getElementById('fileInput').files = files; previewImage(document.getElementById('fileInput')); }
+});
+</script>
+{% endblock %}

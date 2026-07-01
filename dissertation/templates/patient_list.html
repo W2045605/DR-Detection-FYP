@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Patient List — DR Detection System{% endblock %}
+{% block extra_css %}
+<style>
+    .search-bar { display: flex; gap: 12px; align-items: center; }
+    .search-input-wrapper { position: relative; flex: 1; max-width: 340px; }
+    .search-input-wrapper input { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 14px 9px 36px; font-size: 13px; color: var(--text); font-family: 'DM Sans', sans-serif; }
+    .search-input-wrapper input:focus { outline: none; border-color: var(--blue); }
+    .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 13px; }
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); }
+    .empty-state .icon { font-size: 40px; margin-bottom: 16px; opacity: 0.4; }
+    .empty-state h3 { font-size: 16px; font-weight: 500; margin-bottom: 8px; }
+    .empty-state p { font-size: 13px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="page-title">Patient List</div>
+        <div class="page-subtitle">{{ patients.count }} patient{{ patients.count|pluralize }} registered</div>
+    </div>
+    <div class="search-bar">
+        <div class="search-input-wrapper">
+            <span class="search-icon">⌕</span>
+            <input type="text" id="searchInput" placeholder="search patient id or name" oninput="filterTable()">
+        </div>
+        <a href="{% url 'create_patient' %}" class="btn btn-primary">+ New Patient</a>
+    </div>
+</div>
+<div class="card" style="padding: 0;">
+    {% if patients %}
+    <div class="table-wrapper">
+        <table id="patientTable">
+            <thead>
+                <tr><th>NHS ID</th><th>Name</th><th>Stage of Condition</th><th>Last Examination</th><th>Full Profile</th></tr>
+            </thead>
+            <tbody>
+                {% for patient in patients %}
+                <tr>
+                    <td><span style="font-family: 'DM Mono', monospace; font-size: 13px;">{{ patient.patient_id }}</span></td>
+                    <td>{{ patient.name }}</td>
+                    <td>
+                        {% if patient.latest_scan %}
+                            <span class="badge badge-{{ patient.latest_scan.grade }}">{{ patient.latest_scan.get_grade_display }}</span>
+                        {% else %}
+                            <span class="text-muted text-sm">No scans yet</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-muted text-sm">
+                        {% if patient.latest_scan %}{{ patient.latest_scan.created_at|date:"d M Y" }}{% else %}—{% endif %}
+                    </td>
+                    <td><a href="{% url 'patient_detail' patient.patient_id %}" class="btn btn-secondary" style="padding: 6px 16px; font-size: 12px;">full profile</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <div class="icon">👁</div>
+        <h3>No patients yet</h3>
+        <p>Add your first patient to get started.</p>
+        <a href="{% url 'create_patient' %}" class="btn btn-primary" style="margin-top: 16px;">Add Patient</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function filterTable() {
+    const input = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.querySelectorAll('#patientTable tbody tr');
+    rows.forEach(row => {
+        row.style.display = row.textContent.toLowerCase().includes(input) ? '' : 'none';
+    });
+}
+</script>
+{% endblock %}

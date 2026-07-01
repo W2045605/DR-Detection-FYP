@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Diabetic Retinopathy Detection System{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f0f0f;
+            --surface: #1a1a1a;
+            --surface2: #222222;
+            --border: #2e2e2e;
+            --blue: #1e90ff;
+            --blue-dark: #1570cd;
+            --text: #f0f0f0;
+            --text-muted: #888;
+            --text-dim: #555;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+        .navbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 40px; height: 58px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .navbar-brand { font-family: 'DM Mono', monospace; font-size: 13px; letter-spacing: 0.05em; color: var(--blue); text-transform: uppercase; }
+        .navbar-links { display: flex; gap: 8px; align-items: center; }
+        .navbar-links a { color: var(--text-muted); text-decoration: none; font-size: 13px; padding: 6px 14px; border-radius: 6px; transition: all 0.15s; }
+        .navbar-links a:hover { background: var(--surface2); color: var(--text); }
+        .navbar-links .nav-logout { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); }
+        .navbar-links .nav-logout:hover { border-color: var(--error); color: var(--error); }
+        .page-wrapper { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 32px; }
+        .card-sm { padding: 24px; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 22px; border-radius: 8px; border: none; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; transition: all 0.15s; white-space: nowrap; }
+        .btn-primary { background: var(--blue); color: white; }
+        .btn-primary:hover { background: var(--blue-dark); transform: translateY(-1px); }
+        .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+        .btn-secondary:hover { border-color: var(--blue); color: var(--blue); }
+        .btn-danger { background: transparent; color: var(--error); border: 1px solid var(--error); }
+        .btn-danger:hover { background: var(--error); color: white; }
+        .btn-block { width: 100%; }
+        .btn-lg { padding: 13px 28px; font-size: 15px; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 11px 14px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); transition: border-color 0.15s; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--blue); }
+        .form-group input::placeholder { color: var(--text-dim); }
+        .alert { padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .alert-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: var(--success); }
+        .alert-error { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: var(--error); }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        table th { padding: 12px 16px; text-align: left; font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
+        table td { padding: 14px 16px; border-bottom: 1px solid var(--border); color: var(--text); }
+        table tbody tr:hover { background: var(--surface2); }
+        table tbody tr:last-child td { border-bottom: none; }
+        .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px; }
+        .page-title { font-size: 22px; font-weight: 600; margin-bottom: 4px; }
+        .page-subtitle { font-size: 13px; color: var(--text-muted); }
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+        .badge-0 { background: rgba(34,197,94,0.15); color: #4ade80; }
+        .badge-1 { background: rgba(234,179,8,0.15); color: #fbbf24; }
+        .badge-2 { background: rgba(249,115,22,0.15); color: #fb923c; }
+        .badge-3 { background: rgba(239,68,68,0.15); color: #f87171; }
+        .badge-4 { background: rgba(168,85,247,0.15); color: #c084fc; }
+        .divider { height: 1px; background: var(--border); margin: 24px 0; }
+        .text-muted { color: var(--text-muted); }
+        .text-sm { font-size: 13px; }
+        .text-xs { font-size: 11px; }
+        .mt-4 { margin-top: 16px; }
+        .mt-6 { margin-top: 24px; }
+        .flex { display: flex; }
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <nav class="navbar">
+        <span class="navbar-brand">DR · Detection System</span>
+        <div class="navbar-links">
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="{% url 'patient_list' %}">Patients</a>
+            <a href="{% url 'create_patient' %}">+ New Patient</a>
+            <a href="{% url 'logout' %}" class="nav-logout">Logout</a>
+        </div>
+    </nav>
+    {% endif %}
+    <div class="page-wrapper">
+        {% for message in messages %}
+        <div class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-success{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% block content %}{% endblock %}
+    </div>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

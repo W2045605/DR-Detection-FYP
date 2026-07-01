@@ -1,0 +1,66 @@
+
+{% extends 'base.html' %}
+{% block title %}{{ patient.name }} — DR Detection System{% endblock %}
+{% block extra_css %}
+<style>
+    .patient-id-tag { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--blue); background: rgba(30,144,255,0.1); border: 1px solid rgba(30,144,255,0.2); padding: 3px 10px; border-radius: 4px; margin-bottom: 8px; display: inline-block; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+    .detail-field { margin-bottom: 16px; }
+    .detail-field label { font-size: 11px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 4px; }
+    .detail-field .value { font-size: 14px; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 9px 12px; }
+</style>
+{% endblock %}
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 28px;">
+    <div>
+        <a href="{% url 'patient_list' %}" class="text-muted text-sm" style="text-decoration: none; margin-bottom: 8px; display: inline-block;">← Patient List</a>
+        <div class="patient-id-tag">{{ patient.patient_id }}</div>
+        <div class="page-title">{{ patient.name }}</div>
+        <div class="page-subtitle">Date of Birth: {{ patient.date_of_birth }}</div>
+    </div>
+    <a href="{% url 'upload_scan' patient.patient_id %}" class="btn btn-primary">Upload New Scan</a>
+</div>
+<div class="detail-grid">
+    <div class="card card-sm">
+        <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 20px;">Patient Information</h3>
+        <div class="detail-field"><label>NHS Number</label><div class="value" style="font-family: 'DM Mono', monospace; font-size: 13px;">{{ patient.patient_id }}</div></div>
+        <div class="detail-field"><label>Full Name</label><div class="value">{{ patient.name }}</div></div>
+        <div class="detail-field"><label>Date of Birth</label><div class="value">{{ patient.date_of_birth }}</div></div>
+        <div class="detail-field"><label>Gender</label><div class="value">{{ patient.gender|default:"Not specified" }}</div></div>
+    </div>
+    <div class="card card-sm">
+        <h3 style="font-size: 14px; font-weight: 600; margin-bottom: 20px;">Condition Summary</h3>
+        <div class="detail-field"><label>Stage of Condition</label><div class="value">{% if patient.latest_scan %}<span class="badge badge-{{ patient.latest_scan.grade }}">{{ patient.latest_scan.get_grade_display }}</span>{% else %}Not assessed{% endif %}</div></div>
+        <div class="detail-field"><label>Last Examination Date</label><div class="value">{% if patient.latest_scan %}{{ patient.latest_scan.created_at|date:"d M Y" }}{% else %}—{% endif %}</div></div>
+        <div class="detail-field"><label>Additional Notes</label><div class="value" style="min-height: 60px;">{{ patient.notes|default:"No notes added." }}</div></div>
+    </div>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+    <h3 style="font-size: 16px; font-weight: 600;">Scan History</h3>
+    <a href="{% url 'upload_scan' patient.patient_id %}" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">+ Upload Scan</a>
+</div>
+<div class="card" style="padding: 0;">
+    {% if scans %}
+    <div class="table-wrapper">
+        <table>
+            <thead><tr><th>Date</th><th>DR Grade</th><th>Confidence</th><th>Actions</th></tr></thead>
+            <tbody>
+                {% for scan in scans %}
+                <tr>
+                    <td class="text-muted text-sm">{{ scan.created_at|date:"d M Y, H:i" }}</td>
+                    <td><span class="badge badge-{{ scan.grade }}">{{ scan.get_grade_display }}</span></td>
+                    <td class="text-muted">{{ scan.confidence|floatformat:1 }}%</td>
+                    <td><a href="{% url 'scan_result' scan.id %}" class="btn btn-secondary" style="padding: 5px 14px; font-size: 12px;">View Result</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+        <p>No scans yet for this patient.</p>
+        <a href="{% url 'upload_scan' patient.patient_id %}" class="btn btn-primary" style="margin-top: 12px;">Upload First Scan</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

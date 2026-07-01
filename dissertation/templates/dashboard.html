@@ -1,0 +1,70 @@
+
+{% extends 'base.html' %}
+{% block title %}Dashboard — DR Detection System{% endblock %}
+{% block extra_css %}
+<style>
+    .dashboard-hero { text-align: center; padding: 60px 0 40px; }
+    .dashboard-hero .system-name { font-family: 'DM Mono', monospace; font-size: 12px; letter-spacing: 0.12em; color: var(--blue); text-transform: uppercase; margin-bottom: 16px; }
+    .dashboard-hero h1 { font-size: 28px; font-weight: 600; margin-bottom: 8px; }
+    .dashboard-hero .welcome { font-size: 14px; color: var(--text-muted); margin-bottom: 48px; }
+    .dashboard-actions { display: flex; flex-direction: column; gap: 12px; max-width: 280px; margin: 0 auto; }
+    .dashboard-btn { display: block; width: 100%; padding: 14px 24px; background: #111; border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; text-align: center; text-decoration: none; cursor: pointer; transition: all 0.15s; }
+    .dashboard-btn:hover { background: var(--blue); border-color: var(--blue); color: white; transform: translateY(-1px); }
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; max-width: 700px; margin: 48px auto 0; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
+    .stat-value { font-size: 28px; font-weight: 600; color: var(--blue); margin-bottom: 4px; }
+    .stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .recent-section { margin-top: 48px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="dashboard-hero">
+    <div class="system-name">Diabetic Retinopathy Detection System</div>
+    <h1>welcome to your Dashboard</h1>
+    <p class="welcome">welcome {{ user.email }}</p>
+    <div class="dashboard-actions">
+        <a href="{% url 'create_patient' %}" class="dashboard-btn">new patient</a>
+        <a href="{% url 'patient_list' %}" class="dashboard-btn">view patients</a>
+        <a href="{% url 'patient_list' %}?followup=true" class="dashboard-btn">follow ups</a>
+    </div>
+</div>
+<div class="stats-row">
+    <div class="stat-card">
+        <div class="stat-value">{{ patients.count }}</div>
+        <div class="stat-label">Total Patients</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ total_scans }}</div>
+        <div class="stat-label">Scans Performed</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ followup_count }}</div>
+        <div class="stat-label">Follow-ups Needed</div>
+    </div>
+</div>
+{% if recent_scans %}
+<div class="recent-section">
+    <div class="page-header"><div><div class="page-title" style="font-size: 16px;">Recent Scans</div></div></div>
+    <div class="card" style="padding: 0;">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr><th>Patient</th><th>Date</th><th>Grade</th><th>Confidence</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for scan in recent_scans %}
+                    <tr>
+                        <td>{{ scan.patient.name }}</td>
+                        <td class="text-muted">{{ scan.created_at|date:"d M Y" }}</td>
+                        <td><span class="badge badge-{{ scan.grade }}">{{ scan.get_grade_display }}</span></td>
+                        <td class="text-muted">{{ scan.confidence|floatformat:0 }}%</td>
+                        <td><a href="{% url 'scan_result' scan.id %}" class="btn btn-secondary" style="padding: 5px 14px; font-size: 12px;">View</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

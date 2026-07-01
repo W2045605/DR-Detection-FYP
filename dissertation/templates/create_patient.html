@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}New Patient — DR Detection System{% endblock %}
+{% block content %}
+<div style="max-width: 520px; margin: 0 auto;">
+    <div style="margin-bottom: 24px;">
+        <a href="{% url 'dashboard' %}" class="text-muted text-sm" style="text-decoration: none; margin-bottom: 8px; display: inline-block;">← Dashboard</a>
+        <div class="page-title">Patient Details</div>
+        <div class="page-subtitle">Register a new patient</div>
+    </div>
+    <div class="card">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="form-group"><label>NHS Number</label><input type="text" name="patient_id" required placeholder="e.g. NHS-123456"></div>
+            <div class="form-group"><label>Name</label><input type="text" name="name" required placeholder="Full name"></div>
+            <div class="form-group"><label>Date of Birth</label><input type="date" name="date_of_birth" required></div>
+            <div class="form-group">
+                <label>Gender</label>
+                <select name="gender">
+                    <option value="">Select gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+            </div>
+            <div class="form-group"><label>Stage of Condition</label><input type="text" name="stage_of_condition" placeholder="e.g. Early stage, or leave blank"></div>
+            <div class="form-group"><label>Examination Date</label><input type="date" name="examination_date"></div>
+            <div class="form-group"><label>Additional Notes</label><textarea name="notes" rows="3" placeholder="Any additional clinical notes..." style="resize: vertical;"></textarea></div>
+            <div class="divider"></div>
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" class="btn btn-primary btn-block">Store details</button>
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
